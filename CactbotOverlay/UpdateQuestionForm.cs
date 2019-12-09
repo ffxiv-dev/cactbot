@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using Markdig;
 
-namespace RainbowMage.OverlayPlugin.Updater
+namespace Cactbot
 {
     public partial class UpdateQuestionForm : Form
     {

@@ -3,17 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
 using System.Windows.Forms;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
+using RainbowMage.OverlayPlugin.Updater;
 
-namespace RainbowMage.OverlayPlugin.Updater
+// Borrowed from:
+// https://github.com/ngld/OverlayPlugin/blob/4f5b522fe08aaa2eb9536e216a0f5b8d731c07a6/OverlayPlugin.Updater/Updater.cs
+// ... with some minor string replacements.
+
+namespace Cactbot
 {
     public class Updater
     {
-        const string REL_URL = "https://api.github.com/repos/ngld/OverlayPlugin/releases";
-        const string DL = "https://github.com/ngld/OverlayPlugin/releases/download/v{VERSION}/OverlayPlugin-{VERSION}.7z";
+        public static string cbStr(string input)
+        {
+            return input.Replace("OverlayPlugin", "Cactbot");
+        }
+
+        public static DialogResult cbMessageBoxShow(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
+        {
+            return MessageBox.Show(cbStr(text), cbStr(caption), buttons, icon);
+        }
+
+        const string REL_URL = "https://api.github.com/repos/quisquous/cactbot/releases";
+        const string DL = "https://github.com/quisquous/cactbot/releases/download/v{VERSION}/cactbot-{VERSION}.zip";
 
         public static Task<(bool, Version, string)> CheckForUpdate(Control parent)
         {
@@ -28,7 +42,7 @@ namespace RainbowMage.OverlayPlugin.Updater
                 }
                 catch (CurlException ex)
                 {
-                    MessageBox.Show(string.Format(Resources.UpdateCheckException, ex.ToString()), Resources.UpdateCheckTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    cbMessageBoxShow(string.Format(Resources.UpdateCheckException, ex.ToString()), Resources.UpdateCheckTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return (false, null, "");
                 }
 
@@ -56,7 +70,7 @@ namespace RainbowMage.OverlayPlugin.Updater
                 {
                     parent.Invoke((Action) (() =>
                     {
-                        MessageBox.Show(string.Format(Resources.UpdateParseVersionError, ex.ToString()), Resources.UpdateTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        cbMessageBoxShow(string.Format(Resources.UpdateParseVersionError, ex.ToString()), Resources.UpdateTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }));
                     return (false, null, null);
                 }
@@ -72,7 +86,7 @@ namespace RainbowMage.OverlayPlugin.Updater
             var result = await Installer.Run(url, pluginDirectory, true);
             if (!result)
             {
-                var response = MessageBox.Show(
+                var response = cbMessageBoxShow(
                     Resources.UpdateFailedError,
                     Resources.ErrorTitle,
                     MessageBoxButtons.YesNo,
@@ -90,7 +104,7 @@ namespace RainbowMage.OverlayPlugin.Updater
             }
             else
             {
-                MessageBox.Show(
+                cbMessageBoxShow(
                     Resources.UpdateSuccess,
                     Resources.UpdateTitle,
                     MessageBoxButtons.OK,
@@ -101,10 +115,8 @@ namespace RainbowMage.OverlayPlugin.Updater
             }
         }
 
-        public static async void PerformUpdateIfNecessary(Control parent, string pluginDirectory, bool manualCheck = false)
+        public static async void PerformUpdateIfNecessary(Control parent, string pluginDirectory, Cactbot.CactbotEventSourceConfig config, bool manualCheck = false)
         {
-            var config = Registry.Resolve<IPluginConfig>();
-
             // Only check once per day.
             if (!manualCheck && config.LastUpdateCheck != null && (DateTime.Now - config.LastUpdateCheck).TotalDays < 1)
             {
@@ -136,7 +148,7 @@ namespace RainbowMage.OverlayPlugin.Updater
             {
                 parent.Invoke((Action)(() =>
                 {
-                    MessageBox.Show(Resources.UpdateAlreadyLatest, Resources.UpdateTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    cbMessageBoxShow(Resources.UpdateAlreadyLatest, Resources.UpdateTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }));
             }
         }

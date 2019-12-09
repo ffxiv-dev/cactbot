@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Net;
-using System.Net.Http;
 using System.IO;
-using System.Reflection;
+using System.IO.Compression;
 using System.Diagnostics;
-using SharpCompress.Archives.SevenZip;
+using RainbowMage.OverlayPlugin.Updater;
+using System.Text.RegularExpressions;
 
-namespace RainbowMage.OverlayPlugin.Updater
+namespace Cactbot
 {
     public class Installer
     {
@@ -29,7 +27,7 @@ namespace RainbowMage.OverlayPlugin.Updater
 
             _destDir = dest;
             // Make sure our temporary directory is on the same drive as the destination.
-            _tempDir = Path.Combine(Path.GetDirectoryName(dest), "OverlayPlugin.tmp");
+            _tempDir = Path.Combine(Path.GetDirectoryName(dest), "cactbot.tmp");
         }
 
         public static async Task<bool> Run(string url, string _destDir, bool overwrite = false)
@@ -39,9 +37,12 @@ namespace RainbowMage.OverlayPlugin.Updater
             return await Task.Run(() =>
             {
                 var result = false;
-                var archivePath = Path.Combine(inst._tempDir, "update.7z");
+                var archivePath = Path.Combine(inst._tempDir, "update.zip");
 
-                if (inst.Download(url, archivePath) && inst.Extract(archivePath))
+                 // Ignore cactbot-version/cactbot/
+                int stripFolders = 2;
+
+                if (inst.Download(url, archivePath) && inst.Extract(archivePath, stripFolders))
                 {
                     result = overwrite ? inst.InstallOverwrite() : inst.InstallReplace();
                     inst.Cleanup();
@@ -58,7 +59,7 @@ namespace RainbowMage.OverlayPlugin.Updater
 
         public static async Task<bool> InstallMsvcrt()
         {
-            var inst = new Installer(Path.Combine(Path.GetTempPath(), "OverlayPlugin.tmp"));
+            var inst = new Installer(Path.Combine(Path.GetTempPath(), "cactbot.tmp"));
             var exePath = Path.Combine(inst._tempDir, "vc_redist.x64.exe");
 
             return await Task.Run(() =>
@@ -206,18 +207,17 @@ namespace RainbowMage.OverlayPlugin.Updater
             return true;
         }
 
-        private int DlProgressCallback(IntPtr clientp, long dltotal, long dlnow, long ultotal, long ulnow)
+        private bool DlProgressCallback(long resumed, long dltotal, long dlnow, long ultotal, long ulnow)
         {
-            var resumed = (float)((int)clientp);
             var status = string.Format(Resources.StatusDownloadStarted, 1, 2);
 
             if (dltotal > 0)
-                _display.UpdateStatus((resumed + dlnow) / (resumed + dltotal), status);
+                _display.UpdateStatus(((float)resumed + dlnow) / ((float)resumed + dltotal), status);
 
-            return _token.IsCancellationRequested ? 1 : 0;
+            return _token.IsCancellationRequested;
         }
 
-        public bool Extract(string archivePath)
+        public bool Extract(string archivePath, int stripFolders = 0)
         {
             var success = false;
             var cancel = _display.GetCancelToken();
@@ -230,7 +230,7 @@ namespace RainbowMage.OverlayPlugin.Updater
                 var contentsPath = Path.Combine(_tempDir, "contents");
                 Directory.CreateDirectory(contentsPath);
 
-                using (var archive = SevenZipArchive.Open(archivePath))
+                using (var archive = new ZipArchive(new FileStream(archivePath, FileMode.Open), ZipArchiveMode.Read))
                 {
                     // Make sure we never divide by zero.
                     var total = 1d;
@@ -238,47 +238,45 @@ namespace RainbowMage.OverlayPlugin.Updater
 
                     foreach (var entry in archive.Entries)
                     {
-                        total += entry.Size;
+                        total += entry.Length;
                     }
 
-                    using (var reader = archive.ExtractAllEntries())
+                    cancel = _display.GetCancelToken();
+                    _display.Log(Resources.LogExtractingFiles);
+                    foreach (var entry in archive.Entries)
                     {
-                        reader.EntryExtractionProgress += (sender, e) =>
+                        if (cancel.IsCancellationRequested)
                         {
-                            var percent = (float)(done + e.ReaderProgress.BytesTransferred) / total;
-
-                            _display.UpdateStatus(Math.Min(percent, 1), $"[2/2]: {reader.Entry.Key}");
-                        };
-
-                        cancel = _display.GetCancelToken();
-                        _display.Log(Resources.LogExtractingFiles);
-
-                        while (reader.MoveToNextEntry())
-                        {
-                            if (cancel.IsCancellationRequested)
-                            {
-                                break;
-                            }
-
-                            var outPath = Path.Combine(contentsPath, reader.Entry.Key);
-
-                            if (reader.Entry.IsDirectory)
-                            {
-                                if (!Directory.Exists(outPath))
-                                {
-                                    Directory.CreateDirectory(outPath);
-                                }
-                            }
-                            else
-                            {
-                                using (var writer = File.OpenWrite(outPath))
-                                {
-                                    reader.WriteEntryTo(writer);
-                                }
-                            }
-
-                            done += reader.Entry.Size;
+                            break;
                         }
+
+                        var entryName = entry.FullName;
+                        for (int i = 0; i < stripFolders; ++i)
+                        {
+                            if (!entryName.Contains("/"))
+                              break;
+                            entryName = Regex.Match(entryName, @"^.*?/(.*)$" ).Groups[1].Value;
+                        }
+                        if (entryName == "")
+                            continue;
+                        var outPath = Path.Combine(contentsPath, entryName);
+
+                        if (outPath.EndsWith("/"))
+                        {
+                            if (!Directory.Exists(outPath))
+                            {
+                                Directory.CreateDirectory(outPath);
+                            }
+                        }
+                        else
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+                            entry.ExtractToFile(outPath, true);
+                        }
+
+                        done += entry.Length;
+                        var percent = (float)(done) / total;
+                        _display.UpdateStatus(Math.Min(percent, 1), $"[2/2]: {entry.Name}");
                     }
                 }
 

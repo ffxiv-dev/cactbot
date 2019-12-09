@@ -1,29 +1,48 @@
 ﻿using RainbowMage.OverlayPlugin;
 using System;
+using System.IO;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace Cactbot {
-
-  // This class can determine the current plugin version, as well as the latest version
-  // released of the plugin on GitHub. It is inspired by the work of anoyetta in
-  // https://github.com/anoyetta/ACT.SpecialSpellTimer/blob/master/ACT.SpecialSpellTimer.Core/UpdateChecker.cs
   class VersionChecker {
     private ILogger logger_ = null;
-
-    public const string kReleaseApiEndpointUrl = @"https://api.github.com/repos/quisquous/cactbot/releases/latest";
-    public const string kReleaseUrl = "https://github.com/quisquous/cactbot/releases/latest";
-    public const string kIssueUrl = "https://github.com/quisquous/cactbot/issues";
 
     public VersionChecker(ILogger logger) {
       logger_ = logger;
     }
 
+    private Advanced_Combat_Tracker.ActPluginData GetCactbotPluginData() {
+      foreach (var plugin in Advanced_Combat_Tracker.ActGlobals.oFormActMain.ActPlugins) {
+        if (!plugin.cbEnabled.Checked)
+          continue;
+        var file = plugin.pluginFile.Name;
+        if (file == "CactbotOverlay.dll") {
+          return plugin;
+        }
+      }
+      return null;
+    }
+
     public Version GetLocalVersion() {
-      return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+      var plugin = GetCactbotPluginData();
+      if (plugin == null)
+        return new Version();
+      return new Version(System.Diagnostics.FileVersionInfo.GetVersionInfo(plugin.pluginFile.FullName).FileVersion);
     }
 
     public string GetCactbotLocation() {
-      return System.Reflection.Assembly.GetExecutingAssembly().Location;
+      var plugin = GetCactbotPluginData();
+      if (plugin == null)
+        return "(unknown)";
+      return plugin.pluginFile.FullName;
+    }
+
+    public string GetCactbotBaseDirectory() {
+      var plugin = GetCactbotPluginData();
+      if (plugin == null)
+        return null;
+      return plugin.pluginFile.DirectoryName;
     }
 
     public Version GetOverlayPluginVersion() {
@@ -36,6 +55,8 @@ namespace Cactbot {
 
     private Advanced_Combat_Tracker.ActPluginData GetFFXIVPluginData() {
       foreach (var plugin in Advanced_Combat_Tracker.ActGlobals.oFormActMain.ActPlugins) {
+        if (!plugin.cbEnabled.Checked)
+          continue;
         var file = plugin.pluginFile.Name;
         if (file == "FFXIV_ACT_Plugin.dll") {
           return plugin;
@@ -66,24 +87,14 @@ namespace Cactbot {
       return System.Reflection.Assembly.GetAssembly(typeof(Advanced_Combat_Tracker.ActGlobals)).Location;
     }
 
-    public Version GetRemoteVersion() {
-      try {
-        string json;
-        using (var web_client = new System.Net.WebClient()) {
-          // https://developer.github.com/v3/#user-agent-required
-          web_client.Headers.Add("User-Agent", "Cactbot");
-          using (var reader = new System.IO.StreamReader(web_client.OpenRead(kReleaseApiEndpointUrl))) {
-            json = reader.ReadToEnd();
-          }
-        }
-        dynamic latest_release = new System.Web.Script.Serialization.JavaScriptSerializer().DeserializeObject(json);
-
-        return new Version(latest_release["tag_name"].Replace("v", ""));
-      } catch (Exception e) {
-        logger_.LogError("Error fetching most recent github release: " + e.Message + "\n" + e.StackTrace);
-        return new Version();
+    public void DoUpdateCheck(Control control, Cactbot.CactbotEventSourceConfig config) {
+      string pluginDirectory = GetCactbotBaseDirectory();
+      if (pluginDirectory == null) {
+        logger_.LogInfo("Ignoring update check due to unknown base directory.");
+        return;
       }
+
+      Updater.PerformUpdateIfNecessary(control, pluginDirectory, config);
     }
   }
-
 }  // namespace Cactbot

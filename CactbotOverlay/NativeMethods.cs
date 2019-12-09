@@ -10,6 +10,12 @@ namespace Cactbot {
     [DllImport("kernel32.dll")]
     public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, IntPtr nSize, ref IntPtr lpNumberOfBytesRead);
 
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    public static extern IntPtr LoadLibrary(string name);
+
+    [DllImport("kernel32.dll")]
+    public static extern void FreeLibrary(IntPtr handle);
+
     [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
     public static extern IntPtr GetForegroundWindow();
 

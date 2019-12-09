@@ -4,11 +4,11 @@ Download from: https://github.com/ngld/OverlayPlugin/releases
 
 It needs to be installed and enabled in ACT, as per https://github.com/ngld/OverlayPlugin/blob/master/README-en.md
 
-Copy the following DLLs into this directory:
+Extract the contents of the release into this file,
+such that OverlayPlugin.dll is in the base
+CactbotOverlay\ThirdParty\OverlayPlugin directory
+with libs\ subdirectories, etc.
 
-  HtmlRenderer.dll
-  Newtonsoft.Json.dll
-  OverlayPlugin.Common.dll
-  OverlayPlugin.Core.dll
-  OverlayPlugin.dll
-  websocket-sharp.dll
+It's intended that cactbot developers could potentially load
+the this from their CactbotOverlay\ThirdParty\OverlayPlugin
+directory, so that future updates will auto update it properly.

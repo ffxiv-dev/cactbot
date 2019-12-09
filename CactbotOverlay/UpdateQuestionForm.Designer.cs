@@ -1,4 +1,4 @@
-﻿namespace RainbowMage.OverlayPlugin.Updater
+﻿namespace Cactbot
 {
     partial class UpdateQuestionForm
     {

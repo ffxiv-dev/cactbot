@@ -7,10 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace RainbowMage.OverlayPlugin.Updater
+namespace Cactbot
 {
     public partial class ProgressDisplay : Form
     {
+        public static string cbStr(string input) {
+          return input.Replace("OverlayPlugin", "Cactbot");
+        }
+
         CancellationTokenSource _cancel;
 
         public ProgressDisplay()
@@ -40,12 +44,12 @@ namespace RainbowMage.OverlayPlugin.Updater
         public void UpdateStatus(double percent, string msg)
         {
             progressBar.Value = Math.Min(1000, (int) Math.Round(percent * 1000));
-            label.Text = msg;
+            label.Text = cbStr(msg);
         }
 
         public void Log(string text)
         {
-            logBox.AppendText(text + "\r\n");
+            logBox.AppendText(cbStr(text) + "\r\n");
         }
 
         public CancellationToken GetCancelToken()
