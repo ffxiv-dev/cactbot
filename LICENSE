@@ -203,11 +203,11 @@
 
 
 Bundled projects:
-	* CefSharp (3-clause BSD license)
-		https://github.com/cefsharp/CefSharp
-	* jquery (MIT license)
-		https://jquery.com/
-	* FFXIVPluginHelper.cs (custom license allowing sublicensing)
-		https://github.com/xtuaok/ACT_EnmityPlugin/
-	* FF14 fish tracker app (MIT license)
-		https://github.com/icykoneko/ff14-fish-tracker-app
+  * jquery (MIT license)
+    https://jquery.com/
+  * FFXIVPluginHelper.cs (custom license allowing sublicensing)
+    https://github.com/xtuaok/ACT_EnmityPlugin/
+  * FF14 fish tracker app (MIT license)
+    https://github.com/icykoneko/ff14-fish-tracker-app
+  * ngld/OverlayPlugin Updater.cs (MIT License)
+    https://github.com/ngld/OverlayPlugin

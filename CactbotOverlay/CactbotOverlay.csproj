@@ -66,6 +66,10 @@
     <Reference Include="OverlayPlugin.Core">
       <HintPath>ThirdParty\OverlayPlugin\OverlayPlugin.Core.dll</HintPath>
     </Reference>
+    <Reference Include="OverlayPlugin.Updater, Version=0.9.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ThirdParty\OverlayPlugin\OverlayPlugin.Updater.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -89,6 +93,7 @@
     </Compile>
     <Compile Include="FFXIVPlugin.cs" />
     <Compile Include="PluginLoader.cs" />
+    <Compile Include="Updater.cs" />
     <Compile Include="VersionChecker.cs" />
     <Compile Include="FFXIVProcess.cs" />
     <Compile Include="FFXIVProcessCn.cs" />
