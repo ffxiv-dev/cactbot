@@ -1,0 +1,78 @@
+body, html {
+  margin: 0;
+}
+
+html {
+  height: 100%;
+  overflow: scroll;
+  background-color: white;
+
+  font-family: Helvetica;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+#container {
+  display: grid;
+  margin: 12px;
+  grid-template-columns: repeat(1, auto 1fr);
+  grid-gap: 12px;
+}
+
+.section {
+  grid-column-end: span 2;
+  background-color: lightgrey;
+}
+
+.trigger-group {
+  display: grid;
+  margin: 12px;
+  grid-column-end: span 2;
+  grid-template-columns: repeat(1, auto 1fr);
+  grid-gap: 12px;
+}
+
+.trigger {
+
+}
+
+.trigger-options {
+  grid-column-end: span 2;
+}
+
+.trigger-details {
+  display: grid;
+  grid-template-columns: repeat(1, auto 1fr);
+  grid-column-gap: 10px;
+}
+
+.trigger-label {
+  display: inline;
+}
+
+.trigger-detail {
+  display: inline;
+}
+
+.alarm-text {
+  color: #f30;
+}
+
+.alert-text {
+  color: #fb0;
+}
+
+.info-text {
+  color: #2b2;
+}
+
+.regex-text {
+}
+
+.sound-text {
+  color: blue;
+}
+
+.function-text {
+  color: grey;
+}

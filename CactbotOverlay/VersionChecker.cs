@@ -22,8 +22,19 @@ namespace Cactbot {
       return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     }
 
+    private Advanced_Combat_Tracker.ActPluginData GetCactbotPluginData() {
+      foreach (var plugin in Advanced_Combat_Tracker.ActGlobals.oFormActMain.ActPlugins) {
+        var file = plugin.pluginFile.Name;
+        if (file == "CactbotOverlay.dll") {
+          return plugin;
+        }
+      }
+      return null;
+    }
+
     public string GetCactbotLocation() {
-      return System.Reflection.Assembly.GetExecutingAssembly().Location;
+      var data = GetCactbotPluginData();
+      return data.pluginFile.FullName;
     }
 
     public Version GetOverlayPluginVersion() {

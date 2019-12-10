@@ -1,8 +1,10 @@
 ﻿using Advanced_Combat_Tracker;
 using Newtonsoft.Json.Linq;
 using RainbowMage.OverlayPlugin;
+using RainbowMage.OverlayPlugin.Overlays;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -123,7 +125,20 @@ namespace Cactbot {
 
     public override System.Windows.Forms.Control CreateConfigControl()
     {
-      return new CactbotEventSourceConfigPanel(this);
+      var config = new MiniParseOverlayConfig();
+      // TODO: fix this to look relative to your cactbot DLL.
+      // TODO: support both cactbot build tree structure and release folder structure.
+      config.Url = "file:///C:/Users/enne/cactbot/ui/config/config.html";
+      config.Name = "cactbotConfig";
+      config.Position = new Point(0, 0);
+      config.IsVisible = true;
+      config.IsLocked = true;
+      config.IsClickThru = false;
+
+      var configOverlay = new MiniParseOverlay(config, config.Name);
+      configOverlay.Overlay.TopLevel = false;
+
+      return configOverlay.Overlay;
     }
 
     public override void LoadConfig(IPluginConfig config)
