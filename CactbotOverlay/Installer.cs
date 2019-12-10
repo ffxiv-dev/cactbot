@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
-using System.IO;
-using System.IO.Compression;
 using System.Diagnostics;
 using RainbowMage.OverlayPlugin.Updater;
+using System.IO;
 using System.Text.RegularExpressions;
+using SharpCompress.Archives.Zip;
 
 namespace Cactbot
 {
@@ -230,7 +230,7 @@ namespace Cactbot
                 var contentsPath = Path.Combine(_tempDir, "contents");
                 Directory.CreateDirectory(contentsPath);
 
-                using (var archive = new ZipArchive(new FileStream(archivePath, FileMode.Open), ZipArchiveMode.Read))
+                using (var archive = ZipArchive.Open(archivePath))
                 {
                     // Make sure we never divide by zero.
                     var total = 1d;
@@ -238,45 +238,58 @@ namespace Cactbot
 
                     foreach (var entry in archive.Entries)
                     {
-                        total += entry.Length;
+                        total += entry.Size;
                     }
 
-                    cancel = _display.GetCancelToken();
-                    _display.Log(Resources.LogExtractingFiles);
-                    foreach (var entry in archive.Entries)
+                    using (var reader = archive.ExtractAllEntries())
                     {
-                        if (cancel.IsCancellationRequested)
+                        reader.EntryExtractionProgress += (sender, e) =>
                         {
-                            break;
-                        }
+                            var percent = (float)(done + e.ReaderProgress.BytesTransferred) / total;
 
-                        var entryName = entry.FullName;
-                        for (int i = 0; i < stripFolders; ++i)
-                        {
-                            if (!entryName.Contains("/"))
-                              break;
-                            entryName = Regex.Match(entryName, @"^.*?/(.*)$" ).Groups[1].Value;
-                        }
-                        if (entryName == "")
-                            continue;
-                        var outPath = Path.Combine(contentsPath, entryName);
+                            _display.UpdateStatus(Math.Min(percent, 1), $"[2/2]: {reader.Entry.Key}");
+                        };
 
-                        if (outPath.EndsWith("/"))
+                        cancel = _display.GetCancelToken();
+                        _display.Log(Resources.LogExtractingFiles);
+
+                        while (reader.MoveToNextEntry())
                         {
-                            if (!Directory.Exists(outPath))
+                            if (cancel.IsCancellationRequested)
                             {
-                                Directory.CreateDirectory(outPath);
+                                break;
                             }
-                        }
-                        else
-                        {
-                            Directory.CreateDirectory(Path.GetDirectoryName(outPath));
-                            entry.ExtractToFile(outPath, true);
-                        }
 
-                        done += entry.Length;
-                        var percent = (float)(done) / total;
-                        _display.UpdateStatus(Math.Min(percent, 1), $"[2/2]: {entry.Name}");
+                            var entryName = reader.Entry.Key;
+                            for (int i = 0; i < stripFolders; ++i)
+                            {
+                                if (!entryName.Contains("/"))
+                                    break;
+                                entryName = Regex.Match(entryName, @"^.*?/(.*)$").Groups[1].Value;
+                            }
+                            if (entryName == "")
+                                continue;
+                            var outPath = Path.Combine(contentsPath, entryName);
+
+                            if (reader.Entry.IsDirectory)
+                            {
+                                if (!Directory.Exists(outPath))
+                                {
+                                    Directory.CreateDirectory(outPath);
+                                }
+                            }
+                            else
+                            {
+                                Directory.CreateDirectory(Path.GetDirectoryName(outPath));
+
+                                using (var writer = File.OpenWrite(outPath))
+                                {
+                                    reader.WriteEntryTo(writer);
+                                }
+                            }
+
+                            done += reader.Entry.Size;
+                        }
                     }
                 }
 
