@@ -1,5 +1,6 @@
 ﻿using RainbowMage.OverlayPlugin;
 using System;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Cactbot {
@@ -32,9 +33,38 @@ namespace Cactbot {
       return null;
     }
 
-    public string GetCactbotLocation() {
+    public string GetCactbotPluginLocation() {
       var data = GetCactbotPluginData();
+      if (data == null)
+        return "";
       return data.pluginFile.FullName;
+    }
+
+    public string GetCactbotDirectory() {
+      var pluginLocation = GetCactbotPluginLocation();
+      if (pluginLocation == "")   
+        return "";
+      var dllDir = Path.GetFullPath(Path.GetDirectoryName(new Uri(pluginLocation).LocalPath));
+      
+      var checkFile = "ui/config/config.html";
+
+      if (File.Exists(Path.Combine(dllDir, checkFile)))
+        return dllDir;
+
+      var buildDir = Path.GetFullPath(Path.Combine(dllDir, "../../../"));
+      if (File.Exists(Path.Combine(buildDir, checkFile)))
+        return buildDir;
+
+      return "";
+    }
+
+    public string GetConfigUrl() {
+      var cactbotDir = GetCactbotDirectory();
+      if (cactbotDir != "")
+        return Path.GetFullPath(Path.Combine(GetCactbotDirectory(), "ui/config/config.html"));
+
+      logger_.LogError("Unable to find cactbot directory; using remote config.");
+      return "http://quisquous.github.io/cactbot/ui/config/config.html";
     }
 
     public Version GetOverlayPluginVersion() {

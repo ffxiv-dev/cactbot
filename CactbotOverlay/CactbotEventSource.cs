@@ -126,9 +126,7 @@ namespace Cactbot {
     public override System.Windows.Forms.Control CreateConfigControl()
     {
       var config = new MiniParseOverlayConfig();
-      // TODO: fix this to look relative to your cactbot DLL.
-      // TODO: support both cactbot build tree structure and release folder structure.
-      config.Url = "file:///C:/Users/enne/cactbot/ui/config/config.html";
+      config.Url = new VersionChecker(this).GetConfigUrl();
       config.Name = "cactbotConfig";
       config.Position = new Point(0, 0);
       config.IsVisible = true;
@@ -194,7 +192,7 @@ namespace Cactbot {
       Version act = versions.GetACTVersion();
 
       // Print out version strings and locations to help users debug.
-      LogInfo("cactbot: {0} {1}", local.ToString(), versions.GetCactbotLocation());
+      LogInfo("cactbot: {0} {1} {2}", local.ToString(), versions.GetCactbotPluginLocation(), versions.GetCactbotDirectory());
       LogInfo("OverlayPlugin: {0} {1}", overlay.ToString(), versions.GetOverlayPluginLocation());
       LogInfo("FFXIV Plugin: {0} {1}", ffxiv.ToString(), versions.GetFFXIVPluginLocation());
       LogInfo("ACT: {0} {1}", act.ToString(), versions.GetACTLocation());
