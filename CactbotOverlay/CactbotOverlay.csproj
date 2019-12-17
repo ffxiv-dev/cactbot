@@ -62,13 +62,14 @@
       <HintPath>ThirdParty\OverlayPlugin\libs\HtmlRenderer.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>ThirdParty\OverlayPlugin\Newtonsoft.Json.dll</HintPath>
+      <HintPath>ThirdParty\OverlayPlugin\libs\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="OverlayPlugin.Common">
-      <HintPath>ThirdParty\OverlayPlugin\OverlayPlugin.Common.dll</HintPath>
+      <HintPath>ThirdParty\OverlayPlugin\libs\OverlayPlugin.Common.dll</HintPath>
     </Reference>
-    <Reference Include="OverlayPlugin.Core">
-      <HintPath>ThirdParty\OverlayPlugin\OverlayPlugin.Core.dll</HintPath>
+    <Reference Include="OverlayPlugin.Core, Version=0.11.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ThirdParty\OverlayPlugin\libs\OverlayPlugin.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -98,7 +99,6 @@
     <Compile Include="Util.cs" />
     <Compile Include="WipeDetector.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

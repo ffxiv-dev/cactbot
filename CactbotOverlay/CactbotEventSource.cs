@@ -1,5 +1,6 @@
 ﻿using Advanced_Combat_Tracker;
 using Newtonsoft.Json.Linq;
+using RainbowMage.HtmlRenderer;
 using RainbowMage.OverlayPlugin;
 using RainbowMage.OverlayPlugin.Overlays;
 using System;
@@ -125,18 +126,18 @@ namespace Cactbot {
 
     public override System.Windows.Forms.Control CreateConfigControl()
     {
-      var config = new MiniParseOverlayConfig();
-      config.Url = new VersionChecker(this).GetConfigUrl();
-      config.Name = "cactbotConfig";
-      config.Position = new Point(0, 0);
-      config.IsVisible = true;
-      config.IsLocked = true;
-      config.IsClickThru = false;
+      var control = new OverlayControl();
+      var initDone = false;
+      var url = new VersionChecker(this).GetConfigUrl();
 
-      var configOverlay = new MiniParseOverlay(config, config.Name);
-      configOverlay.Overlay.TopLevel = false;
-
-      return configOverlay.Overlay;
+      control.VisibleChanged += (o, e) => {
+        if (initDone)
+          return;
+        initDone = true;
+        control.Init(url);
+        MinimalApi.AttachTo(control.Renderer);
+      };
+      return control;
     }
 
     public override void LoadConfig(IPluginConfig config)
